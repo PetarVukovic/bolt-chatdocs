@@ -65,6 +65,9 @@ export default function NewAgentModal({
       url: URL.createObjectURL(file),
     }));
     setDocuments((prevDocs) => [...prevDocs, ...newDocs]);
+
+    // Zakomentirana metoda za upload dokumenata na backend
+    // await _apiUploadDocuments(agentId, acceptedFiles);
   }, []);
 
   const removeDocument = (docId: string) => {

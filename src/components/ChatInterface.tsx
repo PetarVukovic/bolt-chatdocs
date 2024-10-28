@@ -14,6 +14,8 @@ import {
 } from '@chakra-ui/react';
 import { FiSend } from 'react-icons/fi';
 import useStore from '../store/useStore';
+// Importirajte zakomentiranu API metodu
+// import { _apiSendMessage } from '../api/api';
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
@@ -44,6 +46,10 @@ const ChatInterface: React.FC = () => {
     addMessage(userMessage);
     setInput('');
     setLoading(true);
+
+    // Zakomentirana API metoda za slanje poruke
+    // const aiResponse = await _apiSendMessage(currentAgent.id, input);
+    // addMessage(aiResponse);
 
     // Simulacija AI odgovora
     setTimeout(() => {
@@ -101,7 +107,12 @@ const ChatInterface: React.FC = () => {
           {messages
             .filter((msg) => msg.agentId === currentAgent?.id)
             .map((message, index) => (
-              <SlideFade in={true} offsetY="20px" delay={index * 0.05} key={message.id}>
+              <SlideFade
+                in={true}
+                offsetY="20px"
+                delay={index * 0.05}
+                key={message.id}
+              >
                 <Box
                   alignSelf={message.role === 'user' ? 'flex-end' : 'flex-start'}
                   maxW="70%"

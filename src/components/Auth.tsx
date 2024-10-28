@@ -11,6 +11,8 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import useStore from '../store/useStore';
+// Importirajte zakomentirane API metode
+// import { _apiLogin, _apiRegister } from '../api/api';
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,6 +23,15 @@ const Auth: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Zakomentirane API metode za autentikaciju
+    // if (isLogin) {
+    //   const response = await _apiLogin(email, password);
+    //   setUser(response.data);
+    // } else {
+    //   const response = await _apiRegister(email, password);
+    //   setUser(response.data);
+    // }
 
     // Simulacija autentikacije
     setTimeout(() => {

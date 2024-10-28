@@ -10,7 +10,6 @@ import {
   SlideFade,
   Flex,
   IconButton,
-  Spacer,
   useToast,
   AlertDialog,
   AlertDialogOverlay,
@@ -43,6 +42,16 @@ const Sidebar: React.FC = () => {
   const cancelRef = React.useRef(null);
   const toast = useToast();
   const [agentToEdit, setAgentToEdit] = React.useState<Agent | null>(null);
+
+  const handleNewAgent = () => {
+    setAgentToEdit(null); // Resetiramo agentToEdit kada kreiramo novog agenta
+    onOpen();
+  };
+
+  const handleEditAgent = (agent: Agent) => {
+    setAgentToEdit(agent); // Postavljamo agentToEdit na odabranog agenta
+    onOpen();
+  };
 
   const handleDelete = (agentId: string) => {
     deleteAgent(agentId);
@@ -84,10 +93,7 @@ const Sidebar: React.FC = () => {
         leftIcon={<Icon as={FiPlus} />}
         colorScheme="blue"
         mb={4}
-        onClick={() => {
-          setAgentToEdit(null); // Reset agentToEdit when creating a new agent
-          onOpen();
-        }}
+        onClick={handleNewAgent}
         borderRadius="lg"
         size="lg"
         _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
@@ -103,75 +109,81 @@ const Sidebar: React.FC = () => {
         flex="1"
         className="custom-scrollbar"
       >
-        {agents.map((agent, index) => (
-          <SlideFade in={true} offsetY="20px" delay={index * 0.1} key={agent.id}>
-            <Box
-              p={4}
-              borderWidth="2px"
-              borderColor="orange.400"
-              bg="transparent"
-              rounded="xl"
-              cursor="pointer"
-              _hover={{
-                transform: 'translateY(-2px)',
-                boxShadow: 'lg',
-                borderColor: 'orange.500',
-              }}
-              transition="all 0.2s"
-              onClick={() => setCurrentAgent(agent)}
+        {agents.map((agent, index) => {
+          const isSelected = currentAgent?.id === agent.id; // Provjeravamo je li agent trenutno odabran
+          return (
+            <SlideFade
+              in={true}
+              offsetY="20px"
+              delay={index * 0.1}
+              key={agent.id}
             >
-              <Flex justifyContent="space-between" alignItems="center">
-                <Text
-                  fontSize="lg"
-                  fontWeight="bold"
-                  display="flex"
-                  alignItems="center"
-                >
-                  <Icon as={FiMessageSquare} mr={2} />
-                  {agent.name}
-                </Text>
-                <Flex gap={2}>
-                  <IconButton
-                    aria-label="Edit Agent"
-                    icon={<FiEdit2 />}
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAgentToEdit(agent);
-                      onOpen();
-                    }}
-                    bg="lightsteelblue"
-                  />
-                  <IconButton
-                    aria-label="Delete Agent"
-                    icon={<FiTrash2 />}
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(agent.id);
-
-                    }}
-                    bg="lightsteelblue"
-                  />
+              <Box
+                p={4}
+                borderWidth="2px"
+                borderColor={isSelected ? 'blue.500' : 'orange.400'} // Mijenjamo boju okvira ako je odabran
+                bg={isSelected ? 'blue.600' : 'transparent'} // Mijenjamo pozadinsku boju ako je odabran
+                rounded="xl"
+                cursor="pointer"
+                _hover={{
+                  transform: 'translateY(-2px)',
+                  boxShadow: 'lg',
+                  borderColor: isSelected ? 'blue.600' : 'orange.500', // Mijenjamo boju okvira pri hoveru
+                }}
+                transition="all 0.2s"
+                onClick={() => setCurrentAgent(agent)}
+              >
+                <Flex justifyContent="space-between" alignItems="center">
+                  <Text
+                    fontSize="lg"
+                    fontWeight="bold"
+                    display="flex"
+                    alignItems="center"
+                  >
+                    <Icon as={FiMessageSquare} mr={2} />
+                    {agent.name}
+                  </Text>
+                  <Flex>
+                    <IconButton
+                      aria-label="Edit Agent"
+                      icon={<FiEdit2 />}
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditAgent(agent);
+                      }}
+                    />
+                    <IconButton
+                      aria-label="Delete Agent"
+                      icon={<FiTrash2 />}
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(agent.id);
+                      }}
+                    />
+                  </Flex>
                 </Flex>
-              </Flex>
-              {agent.documents.map((doc) => (
-                <Text
-                  key={doc.id}
-                  fontSize="md"
-                  ml={6}
-                  color="gray.300"
-                  display="flex"
-                  alignItems="center"
-                  mt={2}
-                >
-                  <Icon as={FiFile} mr={1} />
-                  {doc.name}
-                </Text>
-              ))}
-            </Box>
-          </SlideFade>
-        ))}
+                {agent.documents.map((doc) => (
+                  <Text
+                    key={doc.id}
+                    fontSize="md"
+                    ml={6}
+                    color="gray.300"
+                    display="flex"
+                    alignItems="center"
+                    mt={2}
+                  >
+                    <Icon as={FiFile} mr={1} />
+                    {doc.name}
+                  </Text>
+                ))}
+              </Box>
+            </SlideFade>
+          );
+        })}
       </VStack>
 
       <Flex mt={4} justifyContent="center">
@@ -211,7 +223,10 @@ const Sidebar: React.FC = () => {
             <AlertDialogBody>Are you sure you want to logout?</AlertDialogBody>
 
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={() => setIsLogoutDialogOpen(false)}>
+              <Button
+                ref={cancelRef}
+                onClick={() => setIsLogoutDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button colorScheme="red" onClick={confirmLogout} ml={3}>
@@ -224,7 +239,10 @@ const Sidebar: React.FC = () => {
 
       <NewAgentModal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={() => {
+          onClose();
+          setAgentToEdit(null); // Resetiramo agentToEdit kada zatvorimo modal
+        }}
         agentToEdit={agentToEdit}
       />
     </Box>
