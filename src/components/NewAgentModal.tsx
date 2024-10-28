@@ -1,3 +1,4 @@
+// src/components/NewAgentModal.tsx
 import {
   Modal,
   ModalOverlay,
@@ -14,28 +15,61 @@ import {
   useToast,
   Box,
   Text,
+  HStack,
+  IconButton,
 } from '@chakra-ui/react';
-import React from 'react';
-import { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import useStore from '../store/useStore';
+import { Agent, Document } from '../types';
+import { FiTrash2 } from 'react-icons/fi';
 
 interface NewAgentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  agentToEdit?: Agent | null;
 }
 
-export default function NewAgentModal({ isOpen, onClose }: NewAgentModalProps) {
+export default function NewAgentModal({
+  isOpen,
+  onClose,
+  agentToEdit = null,
+}: NewAgentModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [customPrompt, setCustomPrompt] = useState('');
+  const [documents, setDocuments] = useState<Document[]>([]);
   const addAgent = useStore((state) => state.addAgent);
+  const updateAgent = useStore((state) => state.updateAgent);
   const toast = useToast();
 
+  useEffect(() => {
+    if (agentToEdit) {
+      setName(agentToEdit.name);
+      setDescription(agentToEdit.description);
+      setCustomPrompt(agentToEdit.customPrompt);
+      setDocuments(agentToEdit.documents);
+    } else {
+      setName('');
+      setDescription('');
+      setCustomPrompt('');
+      setDocuments([]);
+    }
+  }, [agentToEdit]);
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Handle file upload logic here
-    console.log(acceptedFiles);
+    const newDocs = acceptedFiles.map((file) => ({
+      id: Date.now().toString() + file.name,
+      name: file.name,
+      type: 'pdf' as const,
+      url: URL.createObjectURL(file),
+    }));
+    setDocuments((prevDocs) => [...prevDocs, ...newDocs]);
   }, []);
+
+  const removeDocument = (docId: string) => {
+    setDocuments((prevDocs) => prevDocs.filter((doc) => doc.id !== docId));
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -56,32 +90,38 @@ export default function NewAgentModal({ isOpen, onClose }: NewAgentModalProps) {
       return;
     }
 
-    const newAgent = {
-      id: Date.now().toString(),
+    const agentData: Agent = {
+      id: agentToEdit ? agentToEdit.id : Date.now().toString(),
       name,
       description,
       customPrompt,
-      documents: [],
+      documents,
     };
 
-    addAgent(newAgent);
-    onClose();
-    setName('');
-    setDescription('');
-    setCustomPrompt('');
+    if (agentToEdit) {
+      updateAgent(agentData);
+      toast({
+        title: 'Success',
+        description: 'Agent updated successfully',
+        status: 'success',
+      });
+    } else {
+      addAgent(agentData);
+      toast({
+        title: 'Success',
+        description: 'Agent created successfully',
+        status: 'success',
+      });
+    }
 
-    toast({
-      title: 'Success',
-      description: 'Agent created successfully',
-      status: 'success',
-    });
+    onClose();
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Create New AI Agent</ModalHeader>
+        <ModalHeader>{agentToEdit ? 'Update Agent' : 'Create New AI Agent'}</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <VStack spacing={4}>
@@ -127,13 +167,29 @@ export default function NewAgentModal({ isOpen, onClose }: NewAgentModalProps) {
               >
                 <input {...getInputProps()} />
                 <Text color="gray.500">
-                  {isDragActive ? 'Drop the files here...' : 'Drag and drop files here, or click to select files'}
+                  {isDragActive
+                    ? 'Drop the files here...'
+                    : 'Drag and drop files here, or click to select files'}
                 </Text>
               </Box>
+              <VStack mt={2} align="start">
+                {documents.map((doc) => (
+                  <HStack key={doc.id} w="full" justifyContent="space-between">
+                    <Text>{doc.name}</Text>
+                    <IconButton
+                      aria-label="Remove Document"
+                      icon={<FiTrash2 />}
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeDocument(doc.id)}
+                    />
+                  </HStack>
+                ))}
+              </VStack>
             </FormControl>
 
             <Button colorScheme="blue" onClick={handleSubmit} w="full" mt={4}>
-              Create Agent
+              {agentToEdit ? 'Update Agent' : 'Create Agent'}
             </Button>
           </VStack>
         </ModalBody>

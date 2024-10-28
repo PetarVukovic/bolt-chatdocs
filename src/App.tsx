@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from 'react';
 import { ChakraProvider, Flex } from '@chakra-ui/react';
 import { BrowserRouter as Router } from 'react-router-dom';
